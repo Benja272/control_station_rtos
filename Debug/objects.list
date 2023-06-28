@@ -122,6 +122,7 @@
 "Utilities/STM32F411E-Discovery/stm32f411e_discovery_audio.o"
 "Utilities/STM32F411E-Discovery/stm32f411e_discovery_gyroscope.o"
 "src/main.o"
+"src/mk_dht11.o"
 "src/stm32f4xx_it.o"
 "src/syscalls.o"
 "src/system_stm32f4xx.o"

@@ -1,8 +1,8 @@
-/** 
+/**
   ******************************************************************************
   * @file    stm32f411e_discovery.h
   * @author  MCD Application Team
-  * @brief   This file contains definitions for STM32F401-Discovery Kit's Leds and 
+  * @brief   This file contains definitions for STM32F401-Discovery Kit's Leds and
   *          push-button hardware resources.
   ******************************************************************************
   * @attention
@@ -31,9 +31,9 @@
   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
-  ******************************************************************************  
-  */ 
-  
+  ******************************************************************************
+  */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F411E_DISCOVERY_H
 #define __STM32F411E_DISCOVERY_H
@@ -44,23 +44,23 @@
                                               
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-   
+
 /** @addtogroup BSP
   * @{
   */
-  
+
 /** @addtogroup STM32F411E_DISCOVERY
   * @{
   */
-      
+
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL STM32F411E DISCOVERY HLOW LEVEL
   * @{
-  */ 
+  */
 
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_Exported_Types STM32F411E DISCOVERY HLOW LEVEL Exported Types
   * @{
   */
-typedef enum 
+typedef enum
 {
   LED4 = 0,
   LED3 = 1,
@@ -68,27 +68,27 @@ typedef enum
   LED6 = 3
 }Led_TypeDef;
 
-typedef enum 
-{  
+typedef enum
+{
   BUTTON_KEY = 0,
 }Button_TypeDef;
 
-typedef enum 
-{  
+typedef enum
+{
   BUTTON_MODE_GPIO = 0,
   BUTTON_MODE_EXTI = 1
-}ButtonMode_TypeDef;     
+}ButtonMode_TypeDef;
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_Exported_Constants STM32F411E DISCOVERY HLOW LEVEL Exported Constants
   * @{
-  */ 
+  */
 
-/** 
-  * @brief Define for STM32F411E_DISCOVERY board  
-  */ 
+/**
+  * @brief Define for STM32F411E_DISCOVERY board
+  */
 #if !defined (USE_STM32F411E_DISCO)
  #define USE_STM32F411E_DISCO
 #endif
@@ -109,7 +109,7 @@ typedef enum
 #define LED3_GPIO_CLK_ENABLE()                  __HAL_RCC_GPIOD_CLK_ENABLE()  
 #define LED3_GPIO_CLK_DISABLE()                 __HAL_RCC_GPIOD_CLK_DISABLE()  
 
-  
+
 #define LED5_PIN                                GPIO_PIN_14
 #define LED5_GPIO_PORT                          GPIOD
 #define LED5_GPIO_CLK_ENABLE()                  __HAL_RCC_GPIOD_CLK_ENABLE()  
@@ -134,11 +134,11 @@ typedef enum
                                             }while(0)
 /**
   * @}
-  */ 
-  
+  */
+
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_BUTTON STM32F411E DISCOVERY HLOW LEVEL BUTTON
   * @{
-  */  
+  */
 #define BUTTONn                                 1  
 
 /**
@@ -156,11 +156,11 @@ typedef enum
                                                  }while(0)
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_BUS  STM32F411E DISCOVERY HLOW LEVEL BUS
   * @{
-  */  
+  */
 
 /*############################### I2Cx #######################################*/
 #define DISCOVERY_I2Cx                          I2C1
@@ -266,19 +266,19 @@ typedef enum
 #define ACCELERO_INT2_EXTI_IRQn                 EXTI9_5_IRQn 
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_Exported_Macros STM32F411E DISCOVERY HLOW LEVEL Exported Macros
   * @{
-  */  
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup __STM32F411E_DISCOVERY_HLOW_LEVEL_Exported_Functions  STM32F411E DISCOVERY HLOW LEVEL Exported Functions
   * @{
   */
-uint32_t BSP_GetVersion(void);  
+uint32_t BSP_GetVersion(void);
 void     BSP_LED_Init(Led_TypeDef Led);
 void     BSP_LED_On(Led_TypeDef Led);
 void     BSP_LED_Off(Led_TypeDef Led);
@@ -290,17 +290,16 @@ uint32_t BSP_PB_GetState(Button_TypeDef Button);
   * @}
   */
 
-/**
-  * @}
-  */ 
+/*############################### SENSOR LUZ ##############################*/
+#define SENSOR_LUZ_PIN 							GPIO_PIN_5
+#define SENSOR_LUZ_PORT 						GPIOC
+
+#define DHT11_USART_PORT						GPIOA
+#define DHT11_USART_Tx_PIN						GPIO_PIN_15
 
 /**
   * @}
   */
-
-/**
-  * @}
-  */ 
 
 #ifdef __cplusplus
 }
