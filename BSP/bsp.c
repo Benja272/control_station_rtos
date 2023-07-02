@@ -52,11 +52,10 @@ uint8_t RxData;
 
 
 void 		LED_Init(void);
-void 		SW_Init(void);
-void 		TIM2_Init(void);
-void 		ADC1_Init(void);
+void 		BSP_ADC1_Init(void);
 void 		BSP_LUZ_Init(void);
 void 		BSP_DHT11_Init(void);
+void 		BSP_TIM2_Init(void);
 void 		BSP_TIM3_Init(void);
 void 		BSP_USART1_Init(void);
 void 		BSP_USART2_Init(void);
@@ -65,7 +64,6 @@ void		BSP_WIFI_send_msg(char *msg, uint8_t string_len);
 void 		BSP_WIFI_connect(void);
 uint8_t     BSP_WIFI_status(void);
 void BSP_WIFI_transmit_it(char * msg);
-//void USART1_UART_Init(void);
 void SystemClock_Config(void);
 void Error_Handler(void);
 
@@ -81,15 +79,13 @@ void BSP_Init(void){
 	SystemClock_Config();
 
 	LED_Init();
-	//SW_Init();
-	TIM2_Init();
-	//USART1_UART_Init();
 	/* Inicializamos el sensor de luz */
 	BSP_LUZ_Init();
 	/* Inicializamos el conversor ADC */
-	ADC1_Init();
-	/* Inicializamos el timer 3 */
-	//BSP_TIM3_Init();
+	BSP_ADC1_Init();
+	/* Inicializamos timers */
+	BSP_TIM2_Init();
+	BSP_TIM3_Init();
 
 	/* Inicializamos usart */
 	BSP_USART1_Init();
@@ -126,7 +122,7 @@ void BSP_LUZ_Init(){
 
 
 
-void ADC1_Init(){
+void BSP_ADC1_Init(){
 	hadc1.Instance = ADC1;
 	hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
 	hadc1.Init.Resolution = ADC_RESOLUTION_12B;
@@ -316,7 +312,6 @@ void BSP_WIFI_send_msg(char *msg, uint8_t string_len){
 		n++;
 	}
 	for (uint8_t i=0;i<n;i++){
-		//strcpy((char *)comm, "ATPT=5,1:");
 		strncpy(dest, &msg[5*i], sizeof(dest)-1);
 		dest[5]='\0';
 		msg_len = strlen(dest);
@@ -324,7 +319,7 @@ void BSP_WIFI_send_msg(char *msg, uint8_t string_len){
 		strcat((char *)comm, dest);
 		strcat((char *)comm, comm_end);
 		BSP_WIFI_transmit_it((char *)comm);
-		BSP_Delay(500);
+		BSP_Delay(100);
 	}
 }
 
@@ -338,8 +333,8 @@ void BSP_WIFI_transmit_it(char * msg){
 	uint8_t len = strlen(msg);
 	strcpy((char *)command, msg);
 	while (res != HAL_OK){
-		BSP_Delay(2000);
 		res = HAL_UART_Transmit_IT(&huart2, command, len);
+		BSP_Delay(2000);
 	}
 }
 
@@ -354,25 +349,22 @@ void BSP_WIFI_connect(){
 
 			switch (init_wifi){
 			case 1:
-				BSP_WIFI_transmit_it("AT\r\n");
-				BSP_WIFI_transmit_it(",MICRO2023\r\n");
-				//sprintf((char *)command, "ATPA=MICRO2022,,11,0\r\n");
-				//HAL_UART_Transmit_IT(&huart2, command, 22);
-				/* Pasamos a la siguiente etapa*/
+				BSP_WIFI_transmit_it("ATPW=1\r\n");
 				init_wifi++;
 				break;
 			case 2:
+				BSP_WIFI_transmit_it("ATPN=MICRO2023");
+				BSP_WIFI_transmit_it(",MICRO2023\r\n");
+				/* Pasamos a la siguiente etapa*/
+				init_wifi++;
+				break;
+			case 3:
 				BSP_Delay(500);
 				BSP_WIFI_transmit_it("ATPC=0,192.168.1");
 				BSP_WIFI_transmit_it("37.133,30");
 				BSP_WIFI_transmit_it("00\r\n");
-				//sprintf((char *)command, "ATPS=0,3000\r\n");
-				//HAL_UART_Transmit_IT(&huart2, command, 13);
 
 				/* Pasamos a la siguiente etapa*/
-				init_wifi = 3;
-				break;
-			case 3:
 				init_wifi = 4;
 				break;
 			default:
@@ -472,23 +464,6 @@ void LED_blinkyIRQ(void){
 	}
 }
 
-void SW_Init(void){
-
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-
-	/*Configure GPIO pin : PA0 */
-	GPIO_InitStruct.Pin = GPIO_PIN_0;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	/* EXTI interrupt init*/
-	HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 1);
-	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-}
-
 
 void LED_Init(void){
 
@@ -569,7 +544,7 @@ void SystemClock_Config(void)
   }
 }
 
-void TIM2_Init(void)
+void BSP_TIM2_Init(void)
 {
 
   /* USER CODE BEGIN TIM2_Init 0 */

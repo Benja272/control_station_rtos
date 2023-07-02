@@ -10,6 +10,7 @@
 
 
 #include "main.h"
+#include "stdio.h"
 #include "FreeRTOS.h"
 #include "Task.h"
 #include "Queue.h"
@@ -31,12 +32,9 @@ volatile float 	  humedad_suelo;
 volatile float    humedad_dht11;
 volatile float 	  sensor_inputs[4];
 static TaskHandle_t xEnviar = NULL;
-/* Semaforos
-SemaphoreHandle_t semaforo_1  = xSemaphoreCreateBinary();
-SemaphoreHandle_t semaforo_it = xSemaphoreCreateBinary();
-*/
-//#define semaforo_1  xSemaphoreCreateBinary()
-//#define semaforo_it  xSemaphoreCreateBinary()
+static TaskHandle_t xLeer = NULL;
+void create_msg(float * sensor_inputs, char * msg);
+
 
 /**************************************** TASKS ****************************************/
 
@@ -47,7 +45,7 @@ static void vConectarWifi( void *pvParameters ){
 		BSP_WIFI_connect();
 		/* Esperamos a que se conecte el modulo */
 		//vTaskDelay(pdMS_TO_TICKS(1000));
-		xTaskNotifyGive( xEnviar );
+		xTaskNotifyGive( xLeer );
 		break;
 	}
 	/* Borramos la task ya que cumplio su proposito */
@@ -56,8 +54,9 @@ static void vConectarWifi( void *pvParameters ){
 
 static void vLeerDatos( void *pvParameters ){
 	TickType_t xLastWakeTime = xTaskGetTickCount();
-	const TickType_t xPeriod = pdMS_TO_TICKS( 30*1000 );
+	const TickType_t xPeriod = pdMS_TO_TICKS( 100*1000 );
 
+	ulTaskNotifyTake( pdFALSE, portMAX_DELAY );
 	for(;;)
 	{
 		temperatura_board = BSP_BOARD_GetTemp();
@@ -67,7 +66,6 @@ static void vLeerDatos( void *pvParameters ){
 		humedad_dht11     = dht11_measures[1];
 
 		/* Permitimos al modulo wifi enviar los datos */
-		//xSemaphoreGive(semaforo_1);
 		xTaskNotifyGive( xEnviar );
 
 		/* Establecemos periodicidad */
@@ -81,11 +79,8 @@ static void vEnviarDatos( void *pvParameters )
 {
 	float sensor_inputs[4];
 	char msg[150];
-	ulTaskNotifyTake( pdFALSE, portMAX_DELAY );
 	for(;;){
 		ulTaskNotifyTake( pdFALSE, portMAX_DELAY );
-		/* Tomamos el semaforo cedido en la otra task */
-		//xSemaphoreTake(semaforo_1, portMAX_DELAY);
 
 		/* Creamos el mensaje */
 		sensor_inputs[0] = temperatura_board;
@@ -103,17 +98,20 @@ static void vEnviarDatos( void *pvParameters )
 /**************************************** AUXILIARES ****************************************/
 
 void create_msg(float * sensor_inputs, char * msg){
+	int main, fractional;
 	char temp[50];
 	char inputs[4][6] = {"\0"};
 	for (uint8_t i=0; i<4; i++){
-		gcvt(sensor_inputs[i],5, &inputs[i][0]);
+		main = (int)(sensor_inputs[i]);
+		fractional = (int)(sensor_inputs[i]-main)*100;
+		sprintf(&inputs[i][0], "%d,%d", main, fractional);
 	}
-	sprintf(msg, "Temperatura de la placa %s ï¿½C, ", &inputs[0]);
-	sprintf(temp, "La Humedad del suelo es del %s %%, ", &inputs[1]);
+	sprintf(msg, "Temp placa %s °C \n ", inputs[0]);
+	sprintf(temp, "Hum suelo %s \n ", inputs[1]);
 	strcat(msg, temp);
-	sprintf(temp, "La Temperatura Ambiente es de %s ï¿½C, ", &inputs[2]);
+	sprintf(temp, "Temp Ambiente %s °C, ", inputs[2]);
 	strcat(msg, temp);
-	sprintf(temp, "La Humedad Ambiente es del %s %%.", &inputs[3]);
+	sprintf(temp, "Hum Ambiente %s \n", inputs[3]);
 	strcat(msg, temp);
 }
 
@@ -126,14 +124,14 @@ int main(void)
 
 	/*Inicializacion de los recursos*/
 	BSP_Init();
-	BaseType_t res;
+
 	/* Instanciacion de tasks */
-	//BaseType_t res = xTaskCreate(vEnviarDatos , "Task envio de datos"  , 500, NULL, 2, &xEnviar);
-	//if (res != pdPASS){for(;;){}}
-	res = xTaskCreate(vConectarWifi, "Task conectar wifi"   , 500, NULL, 1, NULL);
+	BaseType_t res = xTaskCreate(vConectarWifi, "Task conectar wifi"   , 500, NULL, 7, NULL);
 	if (res != pdPASS){for(;;){}}
-	//res = xTaskCreate(vLeerDatos   , "Task lectura de datos", 500, NULL, 1, NULL);
-	//if (res != pdPASS){for(;;){}}
+	res = xTaskCreate(vLeerDatos   , "Task lectura de datos", 500, NULL, 6, &xLeer);
+	if (res != pdPASS){for(;;){}}
+	res = xTaskCreate(vEnviarDatos , "Task envio de datos"  , 500, NULL, 6, &xEnviar);
+	if (res != pdPASS){for(;;){}}
 
 	vTaskStartScheduler();
 	/* Execution will only reach here if there was insufficient heap to
@@ -142,21 +140,4 @@ int main(void)
 	for(;;);
 }
 
-/*static void vSenderTask( void *pvParameters ) {
-	BaseType_t xStatus;
-	const TickType_t xTicksToWait = pdMS_TO_TICKS( 100 );
-	uint8_t txData[50];
-
-	for( ;; ) {
-
-		xStatus = xQueueSendToBack( xQueue, pvParameters, xTicksToWait );
-
-		if( xStatus != pdPASS ) {
-
-			sprintf(txData, "Could not send to the queue.\r\n");
-			CONSOLE_SendMsg(txData, (uint16_t)strlen(txData));
-		}
-		vTaskDelay(1);
-	}
-}*/
 
